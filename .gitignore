@@ -161,3 +161,5 @@ cython_debug/
 #.idea/
 
 isic-2020-resized/
+src/test.py/
+src/main2.py/

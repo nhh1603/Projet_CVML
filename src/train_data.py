@@ -2,6 +2,7 @@ import os
 import pandas as pd
 from torchvision.io import read_image
 from torch.utils.data import Dataset
+from PIL import Image
 
 class CustomDataset(Dataset):
     def __init__(self, data_dir, transform=None, target_transform=None):
@@ -18,7 +19,7 @@ class CustomDataset(Dataset):
 
     def __getitem__(self, idx):
         img_path = os.path.join(self.img_dir, f'{self.img_labels.iloc[idx, 0]}.jpg')
-        img = read_image(img_path)
+        img = Image.open(img_path)
         label = self.img_labels.iloc[idx, 1]
         
         if self.transform:
