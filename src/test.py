@@ -1,3 +1,4 @@
 import os
+import torch
 
-print(os.path.abspath(os.path.join(os.getcwd(), '..', 'isic-2020-resized')))
+print(torch.cuda.is_available())

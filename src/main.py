@@ -16,7 +16,6 @@ import train_data
 
 # print(train_dataset.__getitem__(0))
 
-
 mean = np.array([0.5, 0.5, 0.5])
 std = np.array([0.25, 0.25, 0.25])
 
@@ -43,8 +42,8 @@ train_dataset, val_dataset = random_split(custom_train_dataset, [train_size, val
 # test_dataset = test_data.CustomDataset(data_dir=data_dir, transform=data_transforms)
 
 dataloaders = {
-    'train': DataLoader(train_dataset, batch_size=256, shuffle=True),
-    'val': DataLoader(val_dataset, batch_size=256, shuffle=True)
+    'train': DataLoader(train_dataset, batch_size=64, shuffle=True),
+    'val': DataLoader(val_dataset, batch_size=64, shuffle=True)
 }
 
 # Set device (CPU or GPU)
@@ -88,8 +87,8 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
             # Iterate over data.
             for inputs, labels in dataloaders[phase]:
                 # print('*')
-                # inputs = inputs.to(device)
-                # labels = labels.to(device)
+                inputs = inputs.to(device)
+                labels = labels.to(device)
                 iter += 1
                 print(iter, inputs.shape, labels.shape)
                 # forward
@@ -133,4 +132,6 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
     return model
 
 if __name__ == '__main__':
+    model = model.to(device)
     model = train_model(model, criterion, optimizer, scheduler, num_epochs=5)
+    torch.save(model.state_dict(), 'model_weights.pth')
