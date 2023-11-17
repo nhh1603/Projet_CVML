@@ -6,7 +6,6 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from torch.optim import lr_scheduler
-from train_data import CustomDataset
 from torchvision import datasets, models, transforms
 from torchvision.models import resnet18, ResNet18_Weights
 
@@ -35,11 +34,12 @@ train_dataset = train_data.CustomDataset(data_dir=data_dir, transform=data_trans
 test_dataset = test_data.CustomDataset(data_dir=data_dir, transform=data_transforms)
 
 dataloaders = {
-    'train': DataLoader(train_dataset, batch_size=32, shuffle=True),
-    'test': DataLoader(test_dataset, batch_size=32, shuffle=True)
+    'train': DataLoader(train_dataset, batch_size=256, shuffle=True),
+    'test': DataLoader(test_dataset, batch_size=256, shuffle=True)
 }
 
-print(dataloaders['train'])
+# Set device (CPU or GPU)
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Load pre-trained model
 model = models.resnet18(pretrained=True)
@@ -80,6 +80,7 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
                 # print('*')
                 # inputs = inputs.to(device)
                 # labels = labels.to(device)
+                print(inputs.shape, labels.shape)
 
                 # forward
                 # track history if only in train
@@ -123,4 +124,5 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
     model.load_state_dict(best_model_wts)
     return model
 
-# model = train_model(model, criterion, optimizer, scheduler, num_epochs=5)
+if __name__ == '__main__':
+    model = train_model(model, criterion, optimizer, scheduler, num_epochs=5)
