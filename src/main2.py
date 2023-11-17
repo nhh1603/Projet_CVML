@@ -4,7 +4,7 @@ import copy
 import numpy as np
 import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader, random_split
+from torch.utils.data import DataLoader
 from torch.optim import lr_scheduler
 from torchvision import datasets, models, transforms
 from torchvision.models import resnet18, ResNet18_Weights
@@ -24,27 +24,18 @@ data_transforms = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize(mean, std)
 ])
-data_dir = os.path.abspath(os.path.join(os.getcwd(), '..', 'isic-2020-resized'))
-custom_train_dataset = train_data.CustomDataset(data_dir=data_dir, transform=data_transforms)
-
-# Define the size of the training and validation sets
-train_size = int(0.8 * len(custom_train_dataset))
-val_size = len(custom_train_dataset) - train_size
-
-# Split the dataset into training and validation sets
-train_dataset, val_dataset = random_split(custom_train_dataset, [train_size, val_size])
 
 # train_dataset = datasets.ImageFolder(root=f'{os.getcwd()}\isic-2020-resized\train_resized', transform=data_transforms)
 # test_dataset = datasets.ImageFolder(root=f'{os.getcwd()}\isic-2020-resized\test_resized', transform=data_transforms)
 
 # data_dir = f'{os.getcwd()}\isic-2020-resized'
-# data_dir = os.path.abspath(os.path.join(os.getcwd(), '..', 'isic-2020-resized'))
-# train_dataset = train_data.CustomDataset(data_dir=data_dir, transform=data_transforms)
-# test_dataset = test_data.CustomDataset(data_dir=data_dir, transform=data_transforms)
+data_dir = os.path.abspath(os.path.join(os.getcwd(), '..', 'isic-2020-resized'))
+train_dataset = train_data.CustomDataset(data_dir=data_dir, transform=data_transforms)
+test_dataset = test_data.CustomDataset(data_dir=data_dir, transform=data_transforms)
 
 dataloaders = {
     'train': DataLoader(train_dataset, batch_size=256, shuffle=True),
-    'val': DataLoader(val_dataset, batch_size=256, shuffle=True)
+    'test': DataLoader(test_dataset, batch_size=256, shuffle=True)
 }
 
 # Set device (CPU or GPU)
@@ -74,8 +65,7 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
         print('-' * 10)
         
         # Each epoch has a training and validation phase
-        for phase in ['train', 'val']:
-            iter = 0
+        for phase in ['train', 'test']:
             print(f'Starting {phase} phase')
             if phase == 'train':
                 model.train()  # Set model to training mode
@@ -86,26 +76,29 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
             running_corrects = 0
 
             # Iterate over data.
-            for inputs, labels in dataloaders[phase]:
-                # print('*')
-                # inputs = inputs.to(device)
-                # labels = labels.to(device)
-                iter += 1
-                print(iter, inputs.shape, labels.shape)
-                # forward
-                # track history if only in train
-                with torch.set_grad_enabled(phase == 'train'):
-                    outputs = model(inputs)
-                    _, preds = torch.max(outputs, 1)
-                    loss = criterion(outputs, labels)
-                    # backward + optimize only if in training phase
-                    if phase == 'train':
-                        optimizer.zero_grad()
-                        loss.backward()
-                        optimizer.step()
-                # statistics
-                running_loss += loss.item() * inputs.size(0)
-                running_corrects += torch.sum(preds == labels.data)
+            if phase == 'train':
+                for inputs, labels in dataloaders[phase]:
+                    # print('*')
+                    # inputs = inputs.to(device)
+                    # labels = labels.to(device)
+                    print(inputs.shape, labels.shape)
+
+                    # forward
+                    # track history if only in train
+                    with torch.set_grad_enabled(phase == 'train'):
+                        outputs = model(inputs)
+                        _, preds = torch.max(outputs, 1)
+                        loss = criterion(outputs, labels)
+
+                        # backward + optimize only if in training phase
+                        if phase == 'train':
+                            optimizer.zero_grad()
+                            loss.backward()
+                            optimizer.step()
+
+                    # statistics
+                    running_loss += loss.item() * inputs.size(0)
+                    running_corrects += torch.sum(preds == labels.data)
 
             if phase == 'train':
                 scheduler.step()
