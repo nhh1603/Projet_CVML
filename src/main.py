@@ -9,7 +9,7 @@ from torch.optim import lr_scheduler
 from torchvision import datasets, models, transforms
 from torchvision.models import resnet18, ResNet18_Weights
 
-import train_data, test_data
+import train_data
 # model
 # model = resnet18(weights=ResNet18_Weights.DEFAULT)
 # train_dataset = CustomDataset(data_dir=f'{os.getcwd()}\isic-2020-resized')
@@ -117,7 +117,7 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
                 phase, epoch_loss, epoch_acc))
 
             # deep copy the model
-            if phase == 'test' and epoch_acc > best_acc:
+            if phase == 'val' and epoch_acc > best_acc:
                 best_acc = epoch_acc
                 best_model_wts = copy.deepcopy(model.state_dict())
 
