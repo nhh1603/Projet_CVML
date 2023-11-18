@@ -15,11 +15,12 @@ class CustomDataset(Dataset):
 
     def __getitem__(self, idx):
         img_path = os.path.join(self.img_dir, self.img_names[idx])
+        img_name = self.img_names[idx]
         img = Image.open(img_path)
         
         if self.transform:
             img = self.transform(img)
             
-        return img
+        return img, img_name
     
 

@@ -58,6 +58,7 @@ model.fc = nn.Linear(num_ftrs, 2)
 
 # Define loss function, optimizer and scheduler
 criterion = nn.CrossEntropyLoss()
+# criterion = nn.BCEWithLogitsLoss()
 optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
 scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
 
@@ -133,5 +134,5 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
 
 if __name__ == '__main__':
     model = model.to(device)
-    model = train_model(model, criterion, optimizer, scheduler, num_epochs=5)
+    model = train_model(model, criterion, optimizer, scheduler, num_epochs=1)
     torch.save(model.state_dict(), 'model_weights.pth')
