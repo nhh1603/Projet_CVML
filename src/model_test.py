@@ -41,13 +41,16 @@ if __name__ == '__main__':
             # Add any necessary preprocessing steps here if not included in the DataLoader
             inputs = inputs.to(device)
             outputs = model(inputs)
-            _, predicted = torch.max(outputs, 1)  # Assuming a classification task
-            # probs = softmax(outputs, dim=1)  
-            predictions.extend(predicted.cpu().numpy())
-            file_names.extend(names)  # Replace 'file_name' with the actual key in your dataset
+            # _, predicted = torch.max(outputs, 1)  # Assuming a classification task
+            predicted = softmax(outputs, dim=1)  
+            rounded_predicted = torch.round(predicted * 10) / 10.0
+            # predicted_class = [pred[1] for pred in rounded_predicted]
+            predictions.extend(rounded_predicted.cpu().numpy())
+            file_names.extend(names) 
     
+    targets = [pred[1] for pred in predictions]
     # Create a DataFrame to store results
-    results_df = pd.DataFrame({'file_name': file_names, 'predicted_class': predictions})
+    results_df = pd.DataFrame({'image_name': file_names, 'target': targets})
     
     # Save the results to a CSV file
     results_df.to_csv('submission.csv', index=False)
