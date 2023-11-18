@@ -10,6 +10,7 @@ from torchvision import datasets, models, transforms
 from torchvision.models import resnet18, ResNet18_Weights
 
 import train_data
+from FocalLoss import FocalLoss
 # model
 # model = resnet18(weights=ResNet18_Weights.DEFAULT)
 # train_dataset = CustomDataset(data_dir=f'{os.getcwd()}\isic-2020-resized')
@@ -33,14 +34,6 @@ val_size = len(custom_train_dataset) - train_size
 # Split the dataset into training and validation sets
 train_dataset, val_dataset = random_split(custom_train_dataset, [train_size, val_size])
 
-# train_dataset = datasets.ImageFolder(root=f'{os.getcwd()}\isic-2020-resized\train_resized', transform=data_transforms)
-# test_dataset = datasets.ImageFolder(root=f'{os.getcwd()}\isic-2020-resized\test_resized', transform=data_transforms)
-
-# data_dir = f'{os.getcwd()}\isic-2020-resized'
-# data_dir = os.path.abspath(os.path.join(os.getcwd(), '..', 'isic-2020-resized'))
-# train_dataset = train_data.CustomDataset(data_dir=data_dir, transform=data_transforms)
-# test_dataset = test_data.CustomDataset(data_dir=data_dir, transform=data_transforms)
-
 dataloaders = {
     'train': DataLoader(train_dataset, batch_size=64, shuffle=True),
     'val': DataLoader(val_dataset, batch_size=64, shuffle=True)
@@ -50,14 +43,16 @@ dataloaders = {
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Load pre-trained model
-model = models.resnet18(pretrained=True)
+# model = models.resnet18(pretrained=True)
+model = models.resnet18(weights=ResNet18_Weights.DEFAULT)
 
 # Replace the last layer
 num_ftrs = model.fc.in_features
 model.fc = nn.Linear(num_ftrs, 2)
 
 # Define loss function, optimizer and scheduler
-criterion = nn.CrossEntropyLoss()
+# criterion = nn.CrossEntropyLoss()
+criterion = FocalLoss(alpha=1, gamma=2)
 # criterion = nn.BCEWithLogitsLoss()
 optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
 scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
@@ -134,5 +129,5 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
 
 if __name__ == '__main__':
     model = model.to(device)
-    model = train_model(model, criterion, optimizer, scheduler, num_epochs=1)
+    model = train_model(model, criterion, optimizer, scheduler, num_epochs=5)
     torch.save(model.state_dict(), 'model_weights.pth')
