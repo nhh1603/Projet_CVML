@@ -6,8 +6,9 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, random_split
 from torch.optim import lr_scheduler
-from torchvision import datasets, models, transforms
+from torchvision import models, transforms
 from torchvision.models import resnet18, ResNet18_Weights
+from ray import tune
 
 import train_data
 from FocalLoss import FocalLoss
@@ -52,7 +53,7 @@ model.fc = nn.Linear(num_ftrs, 2)
 
 # Define loss function, optimizer and scheduler
 # criterion = nn.CrossEntropyLoss()
-criterion = FocalLoss(alpha=1, gamma=2)
+criterion = FocalLoss(alpha=3, gamma=2)
 # criterion = nn.BCEWithLogitsLoss()
 optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
 scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
@@ -128,6 +129,14 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
     return model
 
 if __name__ == '__main__':
+    # config = {
+    #     'lr': tune.grid_search([0.001, 0.01, 0.1]),
+    #     'momentum': tune.grid_search([0.9, 0.95, 0.99]),
+    #     'batch_size': tune.grid_search([32, 64]),
+    #     'gamma': tune.grid_search([0.1, 0.5, 0.9]),
+    #     # Add more hyperparameters as needed
+    # }
+        
     model = model.to(device)
-    model = train_model(model, criterion, optimizer, scheduler, num_epochs=5)
+    model = train_model(model, criterion, optimizer, scheduler, num_epochs=25)
     torch.save(model.state_dict(), 'model_weights.pth')
