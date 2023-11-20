@@ -4,7 +4,7 @@ import numpy as np
 import os
 
 # Replace 'your_file.csv' with the actual filename
-file_path = os.path.abspath(os.path.join(os.getcwd(), 'submission.csv'))
+file_path = os.path.abspath(os.path.join(os.getcwd(), 'submission', 'submission_resnet18_15.csv'))
 
 # Read the CSV file into a DataFrame
 data = pd.read_csv(file_path)

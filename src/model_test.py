@@ -51,6 +51,9 @@ if __name__ == '__main__':
     targets = [pred[1] for pred in predictions]
     # Create a DataFrame to store results
     results_df = pd.DataFrame({'image_name': file_names, 'target': targets})
+    # results_df = pd.DataFrame(list(zip(file_names, targets)))
+    
+    results_df['image_name'] = results_df['image_name'].str.replace('.jpg', '')
     
     # Save the results to a CSV file
-    results_df.to_csv('submission.csv', index=False)
+    results_df.to_csv('submission/submission_res.csv', index=False)
