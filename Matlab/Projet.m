@@ -1,6 +1,6 @@
 
 % Specify the paths to your training and validation data
-DataDir = 'C:\Users\thaiv\OneDrive\Desktop\TIP\isic-2020-resized\train-resized\train-resized';
+DataDir = 'C:\Users\thaiv\OneDrive\Desktop\TIP\isic-2020-resized\train-resized';
 csvFile = 'C:\Users\thaiv\OneDrive\Desktop\TIP\isic-2020-resized\train-labels.csv';
 dataTable = readtable(csvFile);
 fileNames = fullfile(DataDir, dataTable.image_name + ".jpg");  % Add the file extension
@@ -24,7 +24,7 @@ repeatedMinorityImages = repmat(minorityImages, oversampleFactor, 1);
 
 % Remove the original minority samples from imds
 
-    imds.Files(minorityIndices) = [];
+ imds.Files(minorityIndices) = [];
     
 
 
@@ -52,25 +52,22 @@ lgraph = replaceLayer(lgraph,'fc1000',newFCLayer);
 newClassLayer = classificationLayer('Name','new_classoutput');
 lgraph = replaceLayer(lgraph,'ClassificationLayer_predictions',newClassLayer);
 
-% % Create an augmentedImageDatastore for training with data augmentation
-% augmentedTrainingImds = augmentedImageDatastore([224,224,3],trainingImds, ...
-%     'ColorPreprocessing', 'gray2rgb', ...
-%     'DataAugmentation', imageDataAugmenter(...
-%         'RandXReflection', true, ...
-%         'RandYReflection', true, ...
-%         'RandRotation', [-30, 30], ...
-%         'RandScale', [0.8, 1.2], ...
-%         'RandXTranslation', [-10, 10], ...
-%         'RandYTranslation', [-10, 10], ...
-%         'RandXShear', [-10, 10], ...
-%         'RandYShear', [-10, 10], ...
-%         'FillValue', 0));
+% Create an augmentedImageDatastore for training with data augmentation
+augmentedTrainingImds = augmentedImageDatastore([224,224,3],trainingImds, ...
+    'ColorPreprocessing', 'gray2rgb', ...
+    'DataAugmentation', imageDataAugmenter(...
+        'RandXReflection', true, ...
+        'RandYReflection', true, ...
+        'RandRotation', [-30, 30], ...
+        'RandScale', [0.8, 1.2], ...
+        'RandXTranslation', [-10, 10], ...
+        'RandYTranslation', [-10, 10], ...
+        'RandXShear', [-10, 10], ...
+        'RandYShear', [-10, 10], ...
+        'FillValue', 0));
     
 
-% % Calculate class weights based on the number of samples in each class
-% totalSamples = numel(trainingImds.Labels);
-% numClass0 = sum(trainingImds.Labels == '0');  % Replace '0' with the actual label for the majority class
-% numClass1 = sum(trainingImds.Labels == '1');  % Replace '1' with the actual label for the minority class
+
 
 
 
@@ -78,20 +75,23 @@ lgraph = replaceLayer(lgraph,'ClassificationLayer_predictions',newClassLayer);
 
 
 % Specify Training Options with GPU and parallel support
-options = trainingOptions('sgdm', ...
+options = trainingOptions('adam', ...
     'InitialLearnRate', 0.001, ...
-    'MaxEpochs', 4, ...
-    'MiniBatchSize', 32, ...
+    'MaxEpochs', 50, ...  
+    'MiniBatchSize', 128, ...
     'ValidationData', validationImds, ...
     'ValidationFrequency', 20, ...
     'Plots', 'training-progress', ...
     'ExecutionEnvironment', 'auto', ... 
-    'L2Regularization', 0.1, ...
+    'L2Regularization', 0.01, ...  
     'Shuffle', 'every-epoch', ...
-    'Verbose', false);
+    'Verbose', false, ...  
+    'LearnRateSchedule', 'piecewise', ... 
+    'LearnRateDropFactor', 0.1, ...
+    'LearnRateDropPeriod', 25);  
 
 % Train the Network with augmented data using parallel processing
-net = trainNetwork(trainingImds, lgraph, options);
+net = trainNetwork(augmentedTrainingImds, lgraph, options);
 
 
 
@@ -100,35 +100,35 @@ net = trainNetwork(trainingImds, lgraph, options);
 [ValPred, prob1] = classify(net, validationImds);
 [TrainPred, prob2] = classify(net, trainingImds);
 
-YValidation = validationImds.Labels;
+YValidation =validationImds.Labels;
 
 YTrain=trainingImds.Labels;
 
 incorrectIndices = find(ValPred ~= YValidation);
 incorrectIndices1 = find(TrainPred ~= YTrain);
 
-%Accuracy of the net work
+% Accuracy of the network
+    accuracytrain = sum(TrainPred == YTrain) / numel(YTrain);
+    accuracypred = sum(ValPred == YValidation) / numel(YValidation);
 
-    train0=(sum(TrainPred=='0')/sum(YTrain=='0'))
-    train1=1/(sum(TrainPred=='1')/sum(YTrain=='1'))
+    fprintf('Accuracy Training : %.4f\n', accuracytrain);
+    train0=(sum(TrainPred=='0')/sum(YTrain=='0'));
+    fprintf('Accuracy Training Class 0: %.4f\n', train0);
+    train1=1/(sum(TrainPred=='1')/sum(YTrain=='1'));
+    fprintf('Accuracy Training Class 1: %.4f\n', train1);
+    
+    fprintf('Accuracy Validation : %.4f\n', accuracypred);
+    val0=(sum(ValPred=='0')/sum(YValidation=='0'));
+    fprintf('Accuracy Validation Class 0: %.4f\n', val0);
+    val1=1/(sum(ValPred=='1')/sum(YValidation=='1'));
+    fprintf('Accuracy Validation Class 1 : %.4f\n', val1);
 
-    val0=(sum(ValPred=='0')/sum(YValidation=='0'))
-    val1=1/(sum(ValPred=='1')/sum(YValidation=='1'))
 
 
 
 
 
-% 
-% % Extract probability of malignancy (assuming malignancy is the second class)
-% probabilityOfMalignancy = probs(:, 2);
-% 
-% % Display the probability scores for the first few validation images
-% disp('Probability of Malignancy:');
-% disp(probabilityOfMalignancy(1:5));
-accuracytrain = sum(TrainYpred == YTrain) / numel(YTrain)
-accuracypred = sum(ValPred == YValidation) / numel(YValidation)
 % % fprintf('Accuracy: %.4f\n', accuracy);
 
 % Save the trained network
-save Projet1.mat net lgraph;
+save Projet1_2.mat net lgraph;

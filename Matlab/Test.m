@@ -1,5 +1,5 @@
 %% Load the trained network
-load Projet1.mat net lgraph;
+load Projet1_2.mat net lgraph;
 
 %% Load the test images
 DataDir = 'C:\Users\thaiv\OneDrive\Desktop\TIP\isic-2020-resized\test-resized\test-resized';
@@ -16,15 +16,18 @@ for i = 1:size(imds.Files, 1)
    
     
     % Make predictions
-    [ValPred, prob] = classify(net,img);
+    [YPred, prob] = classify(net,img);
     
     % Extract probability of malignancy (assuming malignancy is the second class)
   
-    probabilityOfMalignancy = prob(:, 2);
+    probabilityOfMalignancy = round(prob(:, 2),1);
     
+    
+    % Extract the filename from the full path
+    [~, fileName, ~] = fileparts(imds.Files{i});
     
     % Store results
-    imageNames{i} = imds.Files{i};
+    imageNames{i} = fileName;
     probabilities(i) = probabilityOfMalignancy;
     
     % Display probability scores and prediction
@@ -34,7 +37,7 @@ for i = 1:size(imds.Files, 1)
 end
 
 %% Create a table with results
-resultsTable = table(imageNames, probabilities, 'VariableNames', {'ImageName', 'Probability'});
+resultsTable = table(imageNames, probabilities, 'VariableNames', {'image_name', 'target'});
 
 %% Write the table to a CSV file
 writetable(resultsTable, 'results.csv');
